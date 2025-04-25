@@ -1,1 +1,205 @@
+Great! Let's enhance your existing design to add value via constructors, and reinforce the concepts of composition, aggregation, threading, and inheritance by making them more explicit and structured.
 
+Here’s an improved version of your code with all those concepts clearly implemented and values passed via constructors:
+
+
+---
+
+Updated Code:
+
+// Base class (Inheritance)
+class Electronic {
+    protected String brand;
+
+    public Electronic(String brand) {
+        this.brand = brand;
+    }
+
+    public void powerOn() {
+        System.out.println(brand + " electronic is powered on.");
+    }
+
+    public void powerOff() {
+        System.out.println(brand + " electronic is powered off.");
+    }
+}
+
+// Composed class - WaterPump
+class WaterPump {
+    private int capacity;
+
+    public WaterPump(int capacity) {
+        this.capacity = capacity;
+    }
+
+    public void pumpWater() {
+        System.out.println("Pumping " + capacity + " liters of water into the dishwasher.");
+    }
+}
+
+// Composed class - DetergentDispenser
+class DetergentDispenser {
+    private String detergentType;
+
+    public DetergentDispenser(String detergentType) {
+        this.detergentType = detergentType;
+    }
+
+    public void releaseDetergent() {
+        System.out.println(detergentType + " detergent released into the dishwasher.");
+    }
+}
+
+// Aggregated class - User
+class User {
+    private String name;
+
+    public User(String name) {
+        this.name = name;
+    }
+
+    public void startDishwasher(Dishwasher dishwasher, String mode) {
+        System.out.println(name + " is starting the dishwasher in " + mode + " mode.");
+        dishwasher.startWashCycle(mode);
+    }
+
+    public void cancelWash(Dishwasher dishwasher) {
+        System.out.println(name + " is canceling the wash.");
+        dishwasher.cancelWashCycle();
+    }
+
+    public void addDishes(Dishwasher dishwasher) {
+        dishwasher.addDishes();
+    }
+
+    public void checkStatus(Dishwasher dishwasher) {
+        System.out.println("Current status: " + dishwasher.getStatus());
+    }
+}
+
+// Dishwasher class
+class Dishwasher extends Electronic implements Runnable {
+    private WaterPump waterPump;
+    private DetergentDispenser detergentDispenser;
+    private String mode = "eco";
+    private String status = "idle";
+    private Thread washThread;
+
+    public Dishwasher(String brand, WaterPump waterPump, DetergentDispenser detergentDispenser) {
+        super(brand);
+        this.waterPump = waterPump;
+        this.detergentDispenser = detergentDispenser;
+    }
+
+    public void startWashCycle(String mode) {
+        if (!status.equals("idle")) {
+            System.out.println("Dishwasher is currently busy.");
+            return;
+        }
+        this.mode = mode.toLowerCase();
+        powerOn();
+        status = "washing";
+        washThread = new Thread(this);
+        washThread.start();
+    }
+
+    public void cancelWashCycle() {
+        if (status.equals("washing") && washThread != null) {
+            washThread.interrupt();
+            status = "idle";
+            System.out.println("Wash cycle canceled.");
+            powerOff();
+        } else {
+            System.out.println("No active wash cycle to cancel.");
+        }
+    }
+
+    public void addDishes() {
+        if (status.equals("idle")) {
+            System.out.println("Dishes added to the dishwasher.");
+        } else {
+            System.out.println("Cannot add dishes while washing.");
+        }
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    @Override
+    public void run() {
+        waterPump.pumpWater();
+        detergentDispenser.releaseDetergent();
+        System.out.println("Dishwasher is running in " + mode + " mode...");
+
+        int washTime;
+        switch (mode) {
+            case "quick":
+                washTime = 2000;
+                break;
+            case "intensive":
+                washTime = 5000;
+                break;
+            default:
+                washTime = 3000;
+                break;
+        }
+
+        try {
+            Thread.sleep(washTime);
+            System.out.println("Dishwasher has finished washing.");
+        } catch (InterruptedException e) {
+            System.out.println("Dishwasher was interrupted during washing.");
+        }
+
+        status = "idle";
+        powerOff();
+    }
+}
+
+// Main class
+public class Main {
+    public static void main(String[] args) {
+        // Create composed objects with values
+        WaterPump pump = new WaterPump(10); // 10 liters capacity
+        DetergentDispenser dispenser = new DetergentDispenser("Lemon Scented");
+
+        // Pass composed objects to dishwasher
+        Dishwasher dishwasher = new Dishwasher("Samsung", pump, dispenser);
+
+        // Aggregated user
+        User user = new User("Alice");
+
+        user.addDishes(dishwasher);
+        user.startDishwasher(dishwasher, "quick");
+
+        // Simulate mid-cycle status check
+        try { Thread.sleep(1000); } catch (InterruptedException e) {}
+        user.checkStatus(dishwasher);
+
+        // Wait for cycle to finish
+        try { Thread.sleep(4000); } catch (InterruptedException e) {}
+        user.checkStatus(dishwasher);
+
+        // Add more dishes after done
+        user.addDishes(dishwasher);
+    }
+}
+
+
+---
+
+What's Added or Improved:
+
+Constructor Value Injection: WaterPump, DetergentDispenser, and Dishwasher now take meaningful values via constructors.
+
+Composition: Dishwasher is composed of WaterPump and DetergentDispenser—now initialized with values.
+
+Aggregation: User still interacts with Dishwasher but doesn't manage its lifecycle.
+
+Threading: Enhanced washing simulation using Thread.sleep() and interruptions.
+
+Inheritance: Clear inheritance with Electronic as the parent.
+
+
+Would you like a UML class diagram or visual breakdown of these relationships too?
